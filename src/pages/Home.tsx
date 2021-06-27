@@ -11,11 +11,22 @@ import { useTheme } from '../hooks/useTheme';
 import { FormEvent, useState } from 'react';
 import { database } from '../services/firebase';
 
+import { useForm } from 'react-hook-form';
+import { yupResolver } from '@hookform/resolvers/yup';
+import * as Yup from 'yup';
+
 export function Home() {
+	const schema = Yup.object().shape({
+		roomCode: Yup.string()
+			.required('Codigo obrigatorio')
+			.min(6, '6 caracteres no minimo'),
+	});
 	const history = useHistory();
 	const { signInWhithGoogle, user } = useAuth();
-	const [roomCode, setRoomCode] = useState('');
 	const { theme, toggleTheme } = useTheme();
+	const { register, handleSubmit, formState } = useForm({
+		resolver: yupResolver(schema),
+	});
 
 	async function handleCreateNewRoom() {
 		if (!user) {
@@ -28,11 +39,8 @@ export function Home() {
 		toggleTheme();
 	}
 
-	async function handleJoinRoom(event: FormEvent) {
-		event.preventDefault();
-		if (roomCode.trim() === '') return;
-
-		const roomRef = await database.ref(`rooms/${roomCode}`).get();
+	async function handleJoinRoom(data: any) {
+		const roomRef = await database.ref(`rooms/${data.roomCode}`).get();
 
 		if (!roomRef.exists()) {
 			alert('Room does not exists');
@@ -44,7 +52,7 @@ export function Home() {
 			return;
 		}
 
-		history.push(`/rooms/${roomCode}`);
+		history.push(`/rooms/${data.roomCode}`);
 	}
 
 	return (
@@ -64,12 +72,16 @@ export function Home() {
 						Crie sua sala com o Google
 					</button>
 					<div className="separator">ou entre em uma sala</div>
-					<form onSubmit={handleJoinRoom}>
+					<form onSubmit={handleSubmit(handleJoinRoom)}>
 						<input
 							type="text"
 							placeholder="Digite o codigo da sala"
-							onChange={event => setRoomCode(event.target.value)}
-							value={roomCode}
+							className={`${
+								formState.errors.roomCode?.message !== 0 ? 'red' : ''
+							}`}
+							// onChange={event => setRoomCode(event.target.value)}
+							// value={roomCode}
+							{...register('roomCode')}
 						/>
 						<Button type="submit">Entrar na sala</Button>
 					</form>
