@@ -8,7 +8,6 @@ import { Button } from '../components/Button';
 import '../styles/auth.scss';
 import { useAuth } from '../hooks/useAuth';
 import { useTheme } from '../hooks/useTheme';
-import { FormEvent, useState } from 'react';
 import { database } from '../services/firebase';
 
 import { useForm } from 'react-hook-form';
@@ -27,6 +26,9 @@ export function Home() {
 	const { register, handleSubmit, formState } = useForm({
 		resolver: yupResolver(schema),
 	});
+
+	console.log(formState.isDirty);
+	console.log(formState.dirtyFields);
 
 	async function handleCreateNewRoom() {
 		if (!user) {
@@ -76,9 +78,7 @@ export function Home() {
 						<input
 							type="text"
 							placeholder="Digite o codigo da sala"
-							className={`${
-								formState.errors.roomCode?.message !== 0 ? 'red' : ''
-							}`}
+							className={`${formState.isDirty ? 'red' : ''}`}
 							// onChange={event => setRoomCode(event.target.value)}
 							// value={roomCode}
 							{...register('roomCode')}
